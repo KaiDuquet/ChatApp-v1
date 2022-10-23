@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Assg 3 Chat App</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="wrapper">
+		<div class="container">
+			<div class="connect" id="connect">
+				<div class="top">
+					Enter username to connect to chat:
+				</div>
+				<div class="bottom">
+					<input type="text" placeholder="Username..." name="usernameField" id="usernameField" />
+					<input type="button" id="connectButton" value="Connect" />
+				</div>
+			</div>
+			<div class="main" id="main">
+				<div class="top">
+					<span>Connected as: <span class="name" id="connectedAsName"></span></span>
+				</div>
+				<div class="chat" id="mainChat">
+				</div>
+				<div class="bottom">
+					<input type="text" placeholder="Message..." name="msgField" id="msgField" />
+					<input type="button" id="sendButton" value="Send" />
+				</div>
+			</div>
+			<div class="sidebar">
+				<div class="top">
+					Online Users
+				</div>
+				<ul class="users" id="users">
+					
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="chatApp.js"></script>
+</body>
+</html>
