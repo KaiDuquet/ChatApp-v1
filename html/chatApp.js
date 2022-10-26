@@ -23,6 +23,10 @@ function addMessageToChatWindow(msgObj) {
 		msgDiv.classList.add("other")
 		pName.innerHTML = msgObj.username
 	}
+	if (msgObj.private) {
+		msgDiv.classList.add("private")
+	}
+
 	pText.innerText = msgObj.text;
 
 	pName.classList.add('name')
@@ -36,9 +40,19 @@ function sendMessage() {
 	const message = document.getElementById('msgField').value.trim()
 	if (message === '')
 		return
-	addMessageToChatWindow({ text: message })
-	socket.emit('sendMessage', message)
-	document.getElementById('msgField').value = ''
+	let msgObj = { text: message }
+	socket.emit('sendMessage', message, ({err, private}) => {
+		console.log(private)
+		if (err) {
+			alert(err);
+			return
+		}
+		else if (private) {
+			msgObj.private = true
+		}
+		addMessageToChatWindow(msgObj)
+		document.getElementById('msgField').value = ''
+	})
 }
 
 function updateRoomData(roomData) {
@@ -55,7 +69,7 @@ function updateRoomData(roomData) {
 		userSpanName.classList.add('name');
 
 		if (user.id === socket.id) {
-			userSpanName.style.color = "rgb(165, 220, 252)";
+			userSpanName.style.color = "rgb(0, 176, 255)";
 		}
 
 		userSpanName.innerHTML = user.name;
@@ -99,9 +113,15 @@ function joinRoomCallback(err) {
 }
 
 
+function handleClearMessages() {
+	const mainChat = document.getElementById('mainChat');
+	mainChat.innerHTML = ''
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('sendButton').addEventListener('click', sendMessage)
 	document.addEventListener('keydown', handleKeyDown)
 	document.getElementById('connectButton').addEventListener('click', attemptConnect)
+	document.getElementById('clearButton').addEventListener('click', handleClearMessages);
 })

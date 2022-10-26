@@ -44,7 +44,7 @@ function app(req, res) {
 	console.log("REQUEST : " + ROOT_DIR + urlObj.pathname)
 	console.log("METHOD  : " + req.method)
 
-	const filePath = ROOT_DIR + urlObj.pathname
+	let filePath = ROOT_DIR + urlObj.pathname
 	if (urlObj.pathname === '/') filePath += 'index.html'
 
 	fs.readFile(filePath, (err, data) => {
@@ -72,6 +72,12 @@ io.on('connection', socket => {
 	socket.on('join', (username, callback) => {
 		username = username.trim();
 
+		if (!(/^[a-zA-Z][^\s]*$/.test(username)))
+			return callback("Invalid username (must start with a letter and contain no spaces)")
+		else if (username === "Server") {
+			return callback("Cannot use reserved 'Server' as username")
+		}
+
 		const { err, user } = addUser(socket.id, username, MAIN_ROOM);
 		if (err)
 			return callback(err);
@@ -98,14 +104,33 @@ io.on('connection', socket => {
 			})
 		}
 	})
-	socket.on('sendMessage', (message) => {
+	socket.on('sendMessage', (message, callback) => {
 		const user = getUser(socket.id);
-		if (!user) return;
-		socket.broadcast.to(user.room).emit('message', { username: user.name, text: message });
-		socket.broadcast.to(user.room).emit('roomData', {
-			room: user.room,
-			users: users
-		})
+		if (!user)
+			return;
+		
+		const colonIndex = message.indexOf(':');
+		if (colonIndex !== -1) {
+			const targetUsers = message.slice(0, colonIndex).split(',').map(x => x.trim());
+			const targetMessage = message.slice(colonIndex + 1);
+
+			for (let i = 0; i < targetUsers.length; i++) {
+				const targetUser = users.find(xUser => xUser.name === targetUsers[i]);
+				if (!targetUser) {
+					return callback({ err: `Target user "${targetUsers[i]}" does not exist in this chat` });
+				}
+				io.to(targetUser.id).emit('message', { username: user.name, text: targetMessage, private: true });
+			}
+			callback({ private: true })
+		}
+		else {
+			socket.broadcast.to(user.room).emit('message', { username: user.name, text: message });
+			socket.broadcast.to(user.room).emit('roomData', {
+				room: user.room,
+				users: users
+			})
+			callback({ private: false })
+		}
 	})
 })
 
